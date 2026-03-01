@@ -6,9 +6,9 @@ services:
     container_name: landpage_db
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-landpage_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-landpage_pass_secure}
-      POSTGRES_DB: ${POSTGRES_DB:-landpage_db}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -21,10 +21,10 @@ services:
     depends_on:
       - db
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-landpage_user}:${POSTGRES_PASSWORD:-landpage_pass_secure}@db:5432/${POSTGRES_DB:-landpage_db}
-      - SECRET_KEY=${SECRET_KEY:-your_super_secret_key_here}
-      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      - SECRET_KEY=${SECRET_KEY}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     volumes:
       - ./backend:/app
     networks:

@@ -6,15 +6,22 @@ from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 
-SECRET_KEY = os.getenv("SECRET_KEY", "your_super_secret_key_here")
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable is missing")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/admin/login")
 
-ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD_HASH = pwd_context.hash(os.getenv("ADMIN_PASSWORD", "admin"))
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
+_admin_password = os.environ.get("ADMIN_PASSWORD")
+if not ADMIN_USERNAME or not _admin_password:
+    raise ValueError("ADMIN_USERNAME and ADMIN_PASSWORD environment variables must be given")
+
+ADMIN_PASSWORD_HASH = pwd_context.hash(_admin_password)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

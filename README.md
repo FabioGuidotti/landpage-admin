@@ -40,9 +40,14 @@ git clone https://.../landpage-admin.git
 cd landpage-admin
 ```
 
-Por segurança, altere as senhas e as chaves no arquivo `docker-compose.yml` (POSTGRES_PASSWORD, SECRET_KEY, ADMIN_PASSWORD).
+Por segurança as senhas foram removidas do código. Você precisa criar um arquivo `.env` baseado no arquivo de exemplo e preencher as senhas seguras antes de subir a plataforma:
 
-Após configurar, rode a infraestrutura:
+```bash
+cp .env.example .env
+nano .env # Edite e coloque senhas fortes aqui
+```
+
+Após configurar o `.env`, rode a infraestrutura:
 
 ```bash
 sudo docker-compose up -d --build
