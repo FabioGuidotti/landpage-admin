@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Landpage Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/admin/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login View -->
+        <div id="login-view" class="view active">
+            <div class="glass-panel login-box">
+                <h2>Admin Login</h2>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required autocomplete="current-password">
+                    </div>
+                    <button type="submit" class="btn primary-btn">Sign In</button>
+                    <div id="login-error" class="error-msg hidden">Invalid credentials</div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view hidden">
+            <nav class="glass-nav">
+                <div class="brand">DashX Landings</div>
+                <button id="logout-btn" class="btn outline-btn">Logout</button>
+            </nav>
+            <main class="dashboard-content">
+                <header class="dash-header">
+                    <h2>Your Landpages</h2>
+                    <button id="new-landing-btn" class="btn primary-btn">+ New Landing</button>
+                </header>
+                
+                <div class="glass-panel table-container">
+                    <table id="landings-table">
+                        <thead>
+                            <tr>
+                                <th>Subdomain</th>
+                                <th>WhatsApp</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="landings-list">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+
+        <!-- Modal View for Create/Edit -->
+        <div id="landing-modal" class="modal hidden">
+            <div class="glass-panel modal-content">
+                <h3 id="modal-title">Create Landing Page</h3>
+                <form id="landing-form">
+                    <input type="hidden" id="landing-id">
+                    <div class="input-group">
+                        <label for="subdomain">Subdomain (e.g. promo1)</label>
+                        <input type="text" id="subdomain" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="whatsapp_number">WhatsApp Number (e.g. 5511999999999)</label>
+                        <input type="text" id="whatsapp_number" placeholder="Only numbers and country code">
+                    </div>
+                    <div class="input-group">
+                        <label for="whatsapp_message">WhatsApp Default Message</label>
+                        <input type="text" id="whatsapp_message" placeholder="Hello! I want to buy...">
+                    </div>
+                    <div class="input-group">
+                        <label for="html_content">HTML Content <small>(Inject {{WHATSAPP_LINK}} where needed)</small></label>
+                        <textarea id="html_content" rows="10" required placeholder="<html>...</html>"></textarea>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="active" checked>
+                        <label for="active">Active</label>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" id="close-modal-btn" class="btn outline-btn">Cancel</button>
+                        <button type="submit" class="btn primary-btn">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="/admin/app.js"></script>
+</body>
+</html>

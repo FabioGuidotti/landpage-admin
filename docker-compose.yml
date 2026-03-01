@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    container_name: landpage_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-landpage_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-landpage_pass_secure}
+      POSTGRES_DB: ${POSTGRES_DB:-landpage_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - landpage_network
+
+  app:
+    build: ./backend
+    container_name: landpage_app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-landpage_user}:${POSTGRES_PASSWORD:-landpage_pass_secure}@db:5432/${POSTGRES_DB:-landpage_db}
+      - SECRET_KEY=${SECRET_KEY:-your_super_secret_key_here}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./backend:/app
+    networks:
+      - landpage_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: landpage_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./frontend:/usr/share/nginx/html/admin
+    depends_on:
+      - app
+    networks:
+      - landpage_network
+
+networks:
+  landpage_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
