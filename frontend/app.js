@@ -116,7 +116,7 @@ function renderTable() {
             <td>
                 <button class="btn outline-btn action-btn edit-btn" data-id="${l.id}">Edit</button>
                 <button class="btn outline-btn action-btn delete-btn" data-id="${l.id}">Delete</button>
-                <a href="http://${l.subdomain}.localhost" target="_blank" class="btn outline-btn action-btn">View</a>
+                <a href="https://${l.subdomain}.ai.dashx.com.br" target="_blank" class="btn outline-btn action-btn">View</a>
             </td>
         `;
         landingsList.appendChild(tr);
