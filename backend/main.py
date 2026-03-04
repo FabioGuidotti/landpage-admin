@@ -130,6 +130,13 @@ def get_landing_stats(landing_id: int, db: Session = Depends(database.get_db), c
         raise HTTPException(status_code=404, detail="Landing not found")
     return crud.get_landing_stats(db, landing_id=landing_id)
 
+@app.get("/api/stats/timeline")
+def get_timeline_stats(days: int = 7, landing_id: int = None, db: Session = Depends(database.get_db), current_admin: str = Depends(auth.get_current_admin)):
+    """Returns daily views/clicks for chart rendering."""
+    if days not in (7, 14, 30):
+        days = 7
+    return crud.get_daily_stats(db, days=days, landing_id=landing_id)
+
 # --- Wildcard Subdomain Handler ---
 # This must be the last / route to avoid catching API routes
 

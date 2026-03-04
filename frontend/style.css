@@ -379,6 +379,100 @@ body {
     border: 1px solid rgba(139, 148, 158, 0.2);
 }
 
+/* Analytics Chart Section */
+.analytics-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.analytics-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.analytics-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.analytics-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    padding: 0.45rem 0.75rem;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 160px;
+}
+
+.filter-select:hover,
+.filter-select:focus {
+    border-color: var(--accent);
+}
+
+.filter-select option {
+    background: #1a1f2e;
+    color: var(--text-primary);
+}
+
+.filter-period {
+    display: flex;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+}
+
+.period-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.45rem 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 1px solid var(--glass-border);
+}
+
+.period-btn:last-child {
+    border-right: none;
+}
+
+.period-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.period-btn.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.chart-container {
+    position: relative;
+    height: 280px;
+    width: 100%;
+}
+
 /* Table */
 .table-container {
     overflow-x: auto;
@@ -623,5 +717,22 @@ tr:hover {
     .conversion-badge {
         font-size: 0.65rem;
         padding: 0.15rem 0.4rem;
+    }
+
+    .analytics-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .analytics-filters {
+        width: 100%;
+    }
+
+    .filter-select {
+        width: 100%;
+    }
+
+    .chart-container {
+        height: 220px;
     }
 }

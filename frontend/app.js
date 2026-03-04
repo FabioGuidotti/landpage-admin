@@ -15,6 +15,9 @@ const landingForm = document.getElementById('landing-form');
 
 // State
 let landings = [];
+let timelineChart = null;
+let currentPeriod = 7;
+let currentLandingFilter = '';
 
 // Init
 function init() {
@@ -23,6 +26,7 @@ function init() {
     } else {
         showLogin();
     }
+    setupFilterListeners();
 }
 
 // Views
@@ -98,10 +102,11 @@ async function apiFetch(path, options = {}) {
 
 async function fetchLandings() {
     try {
-        // Use the stats-enriched endpoint
         landings = await apiFetch('/landings-with-stats');
         renderTable();
+        populateLandingFilter();
         fetchOverviewStats();
+        fetchTimeline();
     } catch (err) {
         console.error(err);
     }
@@ -116,20 +121,190 @@ async function fetchOverviewStats() {
     }
 }
 
-// --- Helper: format numbers ---
+async function fetchTimeline() {
+    try {
+        let url = `/stats/timeline?days=${currentPeriod}`;
+        if (currentLandingFilter) url += `&landing_id=${currentLandingFilter}`;
+        const data = await apiFetch(url);
+        renderChart(data);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// --- Helpers ---
 function fmtNum(n) {
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return n.toString();
 }
 
-// --- Rendering ---
+function fmtDate(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+// --- Filters ---
+
+function setupFilterListeners() {
+    // Period buttons
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentPeriod = parseInt(btn.dataset.days);
+            fetchTimeline();
+        });
+    });
+
+    // Landing select
+    const select = document.getElementById('chart-landing-filter');
+    if (select) {
+        select.addEventListener('change', () => {
+            currentLandingFilter = select.value;
+            fetchTimeline();
+        });
+    }
+}
+
+function populateLandingFilter() {
+    const select = document.getElementById('chart-landing-filter');
+    if (!select) return;
+    const current = select.value;
+    select.innerHTML = '<option value="">Todas as landings</option>';
+    landings.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.id;
+        opt.textContent = l.subdomain;
+        select.appendChild(opt);
+    });
+    select.value = current;
+}
+
+// --- Chart Rendering ---
+
+function renderChart(data) {
+    const ctx = document.getElementById('timeline-chart');
+    if (!ctx) return;
+
+    const labels = data.map(d => fmtDate(d.date));
+    const views = data.map(d => d.views);
+    const clicks = data.map(d => d.clicks);
+
+    if (timelineChart) {
+        timelineChart.destroy();
+    }
+
+    timelineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: 'Visitas',
+                    data: views,
+                    borderColor: '#e8872a',
+                    backgroundColor: 'rgba(232, 135, 42, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#e8872a',
+                    borderWidth: 2,
+                },
+                {
+                    label: 'Cliques WhatsApp',
+                    data: clicks,
+                    borderColor: '#3fb950',
+                    backgroundColor: 'rgba(63, 185, 80, 0.08)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#3fb950',
+                    borderWidth: 2,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color: 'rgba(255,255,255,0.7)',
+                        font: { family: 'Inter', size: 12 },
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        padding: 16,
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(13, 17, 23, 0.95)',
+                    titleColor: '#fff',
+                    bodyColor: 'rgba(255,255,255,0.8)',
+                    borderColor: 'rgba(255,255,255,0.1)',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleFont: { family: 'Inter', weight: '600' },
+                    bodyFont: { family: 'Inter' },
+                    cornerRadius: 8,
+                    displayColors: true,
+                    callbacks: {
+                        title: function (items) {
+                            return items[0].label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: 'rgba(255,255,255,0.04)',
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        color: 'rgba(255,255,255,0.5)',
+                        font: { family: 'Inter', size: 11 },
+                        maxRotation: 0,
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255,255,255,0.04)',
+                        drawBorder: false,
+                    },
+                    ticks: {
+                        color: 'rgba(255,255,255,0.5)',
+                        font: { family: 'Inter', size: 11 },
+                        precision: 0,
+                    }
+                }
+            }
+        }
+    });
+}
+
+// --- Overview Stats Rendering ---
 
 function renderOverviewStats(overview) {
     const statsRow = document.getElementById('stats-row');
     if (!statsRow) return;
     const total = landings.length;
     const active = landings.filter(l => l.active).length;
+
+    // Conversion color
+    let convColor = 'var(--text-secondary)';
+    if (overview.conversion_rate >= 5) convColor = '#3fb950';
+    else if (overview.conversion_rate >= 2) convColor = 'var(--accent)';
 
     statsRow.innerHTML = `
         <div class="glass-panel stat-card">
@@ -138,32 +313,31 @@ function renderOverviewStats(overview) {
             <span class="stat-sub">${active} ativas</span>
         </div>
         <div class="glass-panel stat-card">
-            <span class="stat-icon">👁</span>
             <span class="stat-label">Visitas Totais</span>
             <span class="stat-value">${fmtNum(overview.total_views)}</span>
             <span class="stat-sub stat-today">+${fmtNum(overview.views_today)} hoje</span>
         </div>
         <div class="glass-panel stat-card">
-            <span class="stat-icon">💬</span>
             <span class="stat-label">Cliques WhatsApp</span>
             <span class="stat-value" style="color: var(--success)">${fmtNum(overview.total_clicks)}</span>
             <span class="stat-sub stat-today">+${fmtNum(overview.clicks_today)} hoje</span>
         </div>
         <div class="glass-panel stat-card">
-            <span class="stat-icon">📈</span>
             <span class="stat-label">Taxa de Conversão</span>
-            <span class="stat-value ${overview.conversion_rate >= 5 ? 'conv-good' : overview.conversion_rate >= 2 ? 'conv-ok' : 'conv-low'}">${overview.conversion_rate}%</span>
+            <span class="stat-value" style="color: ${convColor}">${overview.conversion_rate}%</span>
             <span class="stat-sub">cliques / visitas</span>
         </div>
     `;
 }
+
+// --- Table Rendering ---
 
 function renderTable() {
     landingsList.innerHTML = '';
     landings.forEach(l => {
         const tr = document.createElement('tr');
         const s = l.stats || { total_views: 0, total_clicks: 0, views_today: 0, clicks_today: 0, conversion_rate: 0 };
-        const googleBadge = l.pixel_google ? `<span class="google-badge">📊 Google</span>` : '';
+        const googleBadge = l.pixel_google ? `<span class="google-badge">G</span>` : '';
 
         // Conversion rate color class
         let convClass = 'conv-low';

@@ -182,3 +182,46 @@ def get_overview_stats(db: Session) -> schemas.OverviewStats:
         clicks_today=clicks_today,
         conversion_rate=round(conversion_rate, 1)
     )
+
+
+def get_daily_stats(db: Session, days: int = 7, landing_id: int = None) -> list:
+    """Get daily stats for the last N days, optionally filtered by landing_id."""
+    from datetime import timedelta
+    end_date = date.today()
+    start_date = end_date - timedelta(days=days - 1)
+
+    query = db.query(
+        sql_func.date(models.TrackingEvent.created_at).label("day"),
+        models.TrackingEvent.event_type,
+        sql_func.count(models.TrackingEvent.id)
+    ).filter(
+        sql_func.date(models.TrackingEvent.created_at) >= start_date
+    )
+
+    if landing_id:
+        query = query.filter(models.TrackingEvent.landing_id == landing_id)
+
+    rows = query.group_by("day", models.TrackingEvent.event_type).all()
+
+    # Build lookup
+    data = {}
+    for day, event_type, count in rows:
+        day_str = str(day)
+        if day_str not in data:
+            data[day_str] = {"views": 0, "clicks": 0}
+        if event_type == "pageview":
+            data[day_str]["views"] = count
+        elif event_type == "whatsapp_click":
+            data[day_str]["clicks"] = count
+
+    # Fill all days in range (no gaps)
+    result = []
+    current = start_date
+    while current <= end_date:
+        day_str = current.isoformat()
+        d = data.get(day_str, {"views": 0, "clicks": 0})
+        result.append(schemas.DailyStats(date=day_str, views=d["views"], clicks=d["clicks"]))
+        current += timedelta(days=1)
+
+    return result
+

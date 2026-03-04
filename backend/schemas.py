@@ -56,3 +56,9 @@ class OverviewStats(BaseModel):
 class LandingWithStats(LandingResponse):
     stats: Optional[LandingStats] = None
 
+class DailyStats(BaseModel):
+    date: str  # 'YYYY-MM-DD'
+    views: int = 0
+    clicks: int = 0
+
+
