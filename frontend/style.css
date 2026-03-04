@@ -436,6 +436,51 @@ tr:hover {
     height: 16px;
 }
 
+/* Form Section (fieldset) */
+.form-section {
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    background: rgba(232, 135, 42, 0.03);
+}
+
+.form-section legend {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    padding: 0 0.5rem;
+    letter-spacing: 0.3px;
+}
+
+.form-section .input-group {
+    margin-bottom: 0.5rem;
+}
+
+.field-hint {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin: 0;
+    opacity: 0.8;
+    font-style: italic;
+}
+
+/* Google Ads tag badge */
+.google-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    background: rgba(66, 133, 244, 0.12);
+    color: #4285f4;
+    border: 1px solid rgba(66, 133, 244, 0.2);
+    letter-spacing: 0.3px;
+}
+
+
 /* Footer */
 .admin-footer {
     text-align: center;

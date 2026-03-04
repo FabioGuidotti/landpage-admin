@@ -131,8 +131,9 @@ function renderTable() {
     landingsList.innerHTML = '';
     landings.forEach(l => {
         const tr = document.createElement('tr');
+        const googleBadge = l.pixel_google ? `<span class="google-badge">📊 Google</span>` : '';
         tr.innerHTML = `
-            <td><strong>${l.subdomain}</strong></td>
+            <td><strong>${l.subdomain}</strong> ${googleBadge}</td>
             <td>${l.whatsapp_number || '-'}</td>
             <td><span class="status-badge ${l.active ? 'status-active' : 'status-inactive'}">${l.active ? 'Ativa' : 'Inativa'}</span></td>
             <td>${new Date(l.created_at).toLocaleDateString('pt-BR')}</td>
@@ -163,6 +164,7 @@ function openModal(id = null) {
         document.getElementById('subdomain').value = landing.subdomain;
         document.getElementById('whatsapp_number').value = landing.whatsapp_number || '';
         document.getElementById('whatsapp_message').value = landing.whatsapp_message || '';
+        document.getElementById('pixel_google').value = landing.pixel_google || '';
         document.getElementById('html_content').value = landing.html_content || '';
         document.getElementById('active').checked = landing.active;
     } else {
@@ -184,6 +186,7 @@ landingForm.addEventListener('submit', async (e) => {
         subdomain: document.getElementById('subdomain').value,
         whatsapp_number: document.getElementById('whatsapp_number').value,
         whatsapp_message: document.getElementById('whatsapp_message').value,
+        pixel_google: document.getElementById('pixel_google').value || null,
         html_content: document.getElementById('html_content').value,
         active: document.getElementById('active').checked
     };

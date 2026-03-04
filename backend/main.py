@@ -82,6 +82,56 @@ def delete_landing(landing_id: int, db: Session = Depends(database.get_db), curr
 # --- Wildcard Subdomain Handler ---
 # This must be the last / route to avoid catching API routes
 
+def injetar_google_tags(html: str, pixel_google: str | None) -> str:
+    """Inject Google gtag.js + conversion tracking for WhatsApp clicks."""
+    if not pixel_google:
+        return html
+
+    # Google gtag.js (works for GA4 and Google Ads)
+    gtag_script = f"""
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={pixel_google}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', '{pixel_google}');
+    </script>
+    """
+
+    # Conversion tracking: fires when visitor clicks any wa.me link
+    conversion_script = f"""
+    <!-- Google Ads Conversion Tracking for WhatsApp -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {{
+      document.querySelectorAll('a[href*="wa.me"]').forEach(function(link) {{
+        link.addEventListener('click', function() {{
+          if (typeof gtag === 'function') {{
+            gtag('event', 'conversion', {{
+              'send_to': '{pixel_google}/whatsapp_click',
+              'event_category': 'engagement',
+              'event_label': 'whatsapp_click'
+            }});
+          }}
+        }});
+      }});
+    }});
+    </script>
+    """
+
+    if "</head>" in html:
+        html = html.replace("</head>", f"{gtag_script}</head>")
+    else:
+        html = gtag_script + html
+
+    if "</body>" in html:
+        html = html.replace("</body>", f"{conversion_script}</body>")
+    else:
+        html = html + conversion_script
+
+    return html
+
+
 @app.get("/{full_path:path}")
 async def serve_landing(full_path: str, request: Request, db: Session = Depends(database.get_db)):
     host = request.headers.get("host")
@@ -89,16 +139,11 @@ async def serve_landing(full_path: str, request: Request, db: Session = Depends(
         return HTMLResponse(content="<h1>Host header missing</h1>", status_code=400)
     
     # Simple extraction of subdomain, e.g. "test.ai.dashx.com.br" -> "test"
-    # Fallback to empty string or default if not found
     parts = host.split(".")
-    if len(parts) > 2: # At least a.b.c
+    if len(parts) > 2:
         subdomain = parts[0]
     else:
-        # Avoid crashing, maybe local testing via localhost or ip
         subdomain = parts[0]
-    
-    # If the subdomain is exactly what admin is hosted on (optional depending on setup)
-    # We will assume admin is served differently or explicitly.
     
     landing = crud.get_landing_by_subdomain(db, subdomain=subdomain)
     
@@ -111,7 +156,8 @@ async def serve_landing(full_path: str, request: Request, db: Session = Depends(
     if "{{WHATSAPP_LINK}}" in html:
         wa_link = gerar_wa_link(landing.whatsapp_number, landing.whatsapp_message)
         html = html.replace("{{WHATSAPP_LINK}}", wa_link)
-        
-    # Optional pixel injection here
+    
+    # Google Ads / GA4 pixel injection
+    html = injetar_google_tags(html, landing.pixel_google)
     
     return HTMLResponse(content=html)
