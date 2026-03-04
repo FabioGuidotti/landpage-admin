@@ -25,20 +25,16 @@ services:
       - SECRET_KEY=${SECRET_KEY}
       - ADMIN_USERNAME=${ADMIN_USERNAME}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    volumes:
-      - ./backend:/app
     expose:
       - "8000"
     networks:
       - landpage_network
 
   nginx:
-    image: nginx:alpine
+    build: .
+    dockerfile: nginx.Dockerfile
     container_name: landpage_nginx
     restart: always
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./frontend:/usr/share/nginx/html/admin
     depends_on:
       - app
     networks:
