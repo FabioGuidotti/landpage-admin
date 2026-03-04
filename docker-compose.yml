@@ -27,6 +27,8 @@ services:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     volumes:
       - ./backend:/app
+    expose:
+      - "8000"
     networks:
       - landpage_network
 
