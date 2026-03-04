@@ -104,19 +104,42 @@ async function fetchLandings() {
     }
 }
 
+function renderStats() {
+    const statsRow = document.getElementById('stats-row');
+    if (!statsRow) return;
+    const total = landings.length;
+    const active = landings.filter(l => l.active).length;
+    const inactive = total - active;
+    statsRow.innerHTML = `
+        <div class="glass-panel stat-card">
+            <span class="stat-label">Total</span>
+            <span class="stat-value">${total}</span>
+        </div>
+        <div class="glass-panel stat-card">
+            <span class="stat-label">Ativas</span>
+            <span class="stat-value" style="color: var(--success)">${active}</span>
+        </div>
+        <div class="glass-panel stat-card">
+            <span class="stat-label">Inativas</span>
+            <span class="stat-value" style="color: var(--text-secondary)">${inactive}</span>
+        </div>
+    `;
+}
+
 function renderTable() {
+    renderStats();
     landingsList.innerHTML = '';
     landings.forEach(l => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td><strong>${l.subdomain}</strong></td>
             <td>${l.whatsapp_number || '-'}</td>
-            <td><span class="status-badge ${l.active ? 'status-active' : 'status-inactive'}">${l.active ? 'Active' : 'Inactive'}</span></td>
-            <td>${new Date(l.created_at).toLocaleDateString()}</td>
+            <td><span class="status-badge ${l.active ? 'status-active' : 'status-inactive'}">${l.active ? 'Ativa' : 'Inativa'}</span></td>
+            <td>${new Date(l.created_at).toLocaleDateString('pt-BR')}</td>
             <td>
-                <button class="btn outline-btn action-btn edit-btn" data-id="${l.id}">Edit</button>
-                <button class="btn outline-btn action-btn delete-btn" data-id="${l.id}">Delete</button>
-                <a href="https://${l.subdomain}.ai.dashx.com.br" target="_blank" class="btn outline-btn action-btn">View</a>
+                <a href="https://${l.subdomain}.ai.dashx.com.br" target="_blank" class="btn outline-btn action-btn view-btn">Ver</a>
+                <button class="btn outline-btn action-btn edit-btn" data-id="${l.id}">Editar</button>
+                <button class="btn action-btn delete-btn" data-id="${l.id}">Excluir</button>
             </td>
         `;
         landingsList.appendChild(tr);
@@ -135,7 +158,7 @@ function openModal(id = null) {
     const title = document.getElementById('modal-title');
     if (id) {
         const landing = landings.find(l => l.id == id);
-        title.textContent = 'Edit Landing Page';
+        title.textContent = 'Editar Landing Page';
         document.getElementById('landing-id').value = landing.id;
         document.getElementById('subdomain').value = landing.subdomain;
         document.getElementById('whatsapp_number').value = landing.whatsapp_number || '';
@@ -143,7 +166,7 @@ function openModal(id = null) {
         document.getElementById('html_content').value = landing.html_content || '';
         document.getElementById('active').checked = landing.active;
     } else {
-        title.textContent = 'New Landing Page';
+        title.textContent = 'Nova Landing Page';
         landingForm.reset();
         document.getElementById('landing-id').value = '';
     }
@@ -174,17 +197,17 @@ landingForm.addEventListener('submit', async (e) => {
         closeModal();
         fetchLandings();
     } catch (err) {
-        alert('Error saving rendering. Maybe subdomain already exists?');
+        alert('Erro ao salvar. Talvez o subdomínio já exista.');
     }
 });
 
 async function handleDelete(id) {
-    if (confirm('Are you sure you want to delete this landing page?')) {
+    if (confirm('Tem certeza que deseja excluir esta landing page?')) {
         try {
             await apiFetch(`/landings/${id}`, { method: 'DELETE' });
             fetchLandings();
         } catch (err) {
-            alert('Error deleting');
+            alert('Erro ao excluir');
         }
     }
 }

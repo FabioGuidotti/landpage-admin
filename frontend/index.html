@@ -1,29 +1,37 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SaaS Landpage Admin</title>
+    <title>Dashx Landings — Admin</title>
+    <meta name="description" content="Painel administrativo de landing pages Dashx">
+    <link rel="icon" type="image/png" href="/admin/favicon-dashx.png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/admin/style.css">
 </head>
+
 <body>
     <div id="app">
         <!-- Login View -->
         <div id="login-view" class="view active">
             <div class="glass-panel login-box">
-                <h2>Admin Login</h2>
+                <img src="/admin/logo-dashx-white.png" alt="Dashx" class="login-logo">
+                <h2>Admin Panel</h2>
+                <p class="login-subtitle">Gerencie suas landing pages</p>
                 <form id="login-form">
                     <div class="input-group">
-                        <label for="username">Username</label>
-                        <input type="text" id="username" required autocomplete="username">
+                        <label for="username">Usuário</label>
+                        <input type="text" id="username" required autocomplete="username"
+                            placeholder="Digite seu usuário">
                     </div>
                     <div class="input-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" required autocomplete="current-password">
+                        <label for="password">Senha</label>
+                        <input type="password" id="password" required autocomplete="current-password"
+                            placeholder="Digite sua senha">
                     </div>
-                    <button type="submit" class="btn primary-btn">Sign In</button>
-                    <div id="login-error" class="error-msg hidden">Invalid credentials</div>
+                    <button type="submit" class="btn primary-btn">Entrar</button>
+                    <div id="login-error" class="error-msg hidden">Credenciais inválidas</div>
                 </form>
             </div>
         </div>
@@ -31,24 +39,32 @@
         <!-- Dashboard View -->
         <div id="dashboard-view" class="view hidden">
             <nav class="glass-nav">
-                <div class="brand">DashX Landings</div>
-                <button id="logout-btn" class="btn outline-btn">Logout</button>
+                <div class="brand">
+                    <img src="/admin/logo-dashx-white.png" alt="Dashx">
+                    <span class="brand-separator"></span>
+                    <span class="brand-label">Landings</span>
+                </div>
+                <button id="logout-btn" class="btn outline-btn">Sair</button>
             </nav>
             <main class="dashboard-content">
+                <div id="stats-row" class="stats-row">
+                    <!-- Populated by JS -->
+                </div>
+
                 <header class="dash-header">
-                    <h2>Your Landpages</h2>
-                    <button id="new-landing-btn" class="btn primary-btn">+ New Landing</button>
+                    <h2>Suas Landing Pages</h2>
+                    <button id="new-landing-btn" class="btn primary-btn">+ Nova Landing</button>
                 </header>
-                
+
                 <div class="glass-panel table-container">
                     <table id="landings-table">
                         <thead>
                             <tr>
-                                <th>Subdomain</th>
+                                <th>Subdomínio</th>
                                 <th>WhatsApp</th>
                                 <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th>Criado em</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="landings-list">
@@ -57,43 +73,49 @@
                     </table>
                 </div>
             </main>
+            <footer class="admin-footer">
+                Powered by <a href="https://dashx.com.br" target="_blank">Dashx</a> &mdash; Transformando seus dados em
+                resultados
+            </footer>
         </div>
 
         <!-- Modal View for Create/Edit -->
         <div id="landing-modal" class="modal hidden">
             <div class="glass-panel modal-content">
-                <h3 id="modal-title">Create Landing Page</h3>
+                <h3 id="modal-title">Criar Landing Page</h3>
                 <form id="landing-form">
                     <input type="hidden" id="landing-id">
                     <div class="input-group">
-                        <label for="subdomain">Subdomain (e.g. promo1)</label>
-                        <input type="text" id="subdomain" required>
+                        <label for="subdomain">Subdomínio (ex: promo1)</label>
+                        <input type="text" id="subdomain" required placeholder="nome-da-pagina">
                     </div>
                     <div class="input-group">
-                        <label for="whatsapp_number">WhatsApp Number (e.g. 5511999999999)</label>
-                        <input type="text" id="whatsapp_number" placeholder="Only numbers and country code">
+                        <label for="whatsapp_number">Número WhatsApp (ex: 5511999999999)</label>
+                        <input type="text" id="whatsapp_number" placeholder="Apenas números com código do país">
                     </div>
                     <div class="input-group">
-                        <label for="whatsapp_message">WhatsApp Default Message</label>
-                        <input type="text" id="whatsapp_message" placeholder="Hello! I want to buy...">
+                        <label for="whatsapp_message">Mensagem padrão do WhatsApp</label>
+                        <input type="text" id="whatsapp_message" placeholder="Olá! Tenho interesse em...">
                     </div>
                     <div class="input-group">
-                        <label for="html_content">HTML Content <small>(Inject {{WHATSAPP_LINK}} where needed)</small></label>
+                        <label for="html_content">Conteúdo HTML <small>(use {{WHATSAPP_LINK}} onde quiser o link do
+                                WhatsApp)</small></label>
                         <textarea id="html_content" rows="10" required placeholder="<html>...</html>"></textarea>
                     </div>
                     <div class="checkbox-group">
                         <input type="checkbox" id="active" checked>
-                        <label for="active">Active</label>
+                        <label for="active">Ativo</label>
                     </div>
                     <div class="modal-actions">
-                        <button type="button" id="close-modal-btn" class="btn outline-btn">Cancel</button>
-                        <button type="submit" class="btn primary-btn">Save</button>
+                        <button type="button" id="close-modal-btn" class="btn outline-btn">Cancelar</button>
+                        <button type="submit" class="btn primary-btn">Salvar</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-    
+
     <script src="/admin/app.js"></script>
 </body>
+
 </html>
