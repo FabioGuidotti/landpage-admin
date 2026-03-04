@@ -12,18 +12,9 @@ Plataforma SaaS ultra rápida para publicação de Landing Pages baseadas em HTM
 
 ---
 
-## 💻 Como Rodar na sua VPS (Ubuntu 22.04+)
+## 💻 Como Rodar via Portainer
 
-### 1. Preparação da VPS
-Certifique-se de que sua VPS tenha Docker e Docker Compose instalados.
-
-```bash
-# Atualizar e instalar Docker
-sudo apt update
-sudo apt install docker.io docker-compose -y
-```
-
-### 2. Configuração do DNS
+### 1. Configuração do DNS
 No seu painel de DNS (Cloudflare, Hostinger, etc), crie um registro *Wildcard* (Coringa):
 
 - **Tipo:** `A`
@@ -32,26 +23,29 @@ No seu painel de DNS (Cloudflare, Hostinger, etc), crie um registro *Wildcard* (
 
 *Se você for usar o domínio principal para acessar algo, adicione também `ai.dashx.com.br` apontando para o mesmo IP.*
 
-### 3. Clone e Suba o Projeto
-Clone este repositório para o seu servidor.
+### 2. Deploy no Portainer (Stacks)
+Certifique-se de que você já possui o [Portainer](https://www.portainer.io/) instalado e configurado na sua VPS.
 
-```bash
-git clone https://.../landpage-admin.git
-cd landpage-admin
-```
+1. Acesse o painel do seu **Portainer**.
+2. Selecione o seu ambiente (geralmente `local`).
+3. No menu lateral, clique em **Stacks** e depois no botão **Add stack**.
+4. Dê um nome para a sua stack (exemplo: `landpage-admin`).
+5. Na seção **Build method**, escolha a opção **Repository**.
+6. Preencha os detalhes do repositório:
+   - **Repository URL:** Coloque a URL deste repositório Git.
+   - **Repository reference:** Deixe em branco (ou `refs/heads/main` dependendo da sua branch).
+   - **Compose path:** Deixe como `docker-compose.yml`.
+7. Na seção **Environment variables**, clique em **Advanced mode** ou adicione manualmente as seguintes variáveis baseadas no `.env.example`:
+   - `POSTGRES_USER`
+   - `POSTGRES_PASSWORD` (use uma senha forte)
+   - `POSTGRES_DB`
+   - `FASTAPI_ADMIN_USER`
+   - `FASTAPI_ADMIN_PASS`
+8. Role até o final da página e clique em **Deploy the stack**.
 
-Por segurança as senhas foram removidas do código. Você precisa criar um arquivo `.env` baseado no arquivo de exemplo e preencher as senhas seguras antes de subir a plataforma:
+> **Nota para usuários do Traefik:** O `docker-compose.yml` nativo já vem configurado para ingressar na rede `proxy` e buscar os certificados SSL via Let's Encrypt para `*.ai.dashx.com.br` e `ai.dashx.com.br` no entrypoint `websecure`. Certifique-se de que a rede no seu Portainer chama-se `proxy`.
 
-```bash
-cp .env.example .env
-nano .env # Edite e coloque senhas fortes aqui
-```
-
-Após configurar o `.env`, rode a infraestrutura:
-
-```bash
-sudo docker-compose up -d --build
-```
+O Portainer fará o clone do projeto, realizará o build da imagem do FastAPI e subirá todos os containers (Nginx, FastAPI, PostgreSQL) automaticamente.
 
 ### 4. Acessando o Painel Admin
 Acesse qualquer subdomínio do seu app com a rota `/admin`. 

@@ -34,9 +34,6 @@ services:
     image: nginx:alpine
     container_name: landpage_nginx
     restart: always
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d
       - ./frontend:/usr/share/nginx/html/admin
@@ -44,10 +41,20 @@ services:
       - app
     networks:
       - landpage_network
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.landpage.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.ai.dashx.com.br`) || Host(`ai.dashx.com.br`)"
+      - "traefik.http.routers.landpage.entrypoints=websecure"
+      - "traefik.http.routers.landpage.tls.certresolver=letsencrypt"
+      - "traefik.http.services.landpage.loadbalancer.server.port=80"
+      - "traefik.docker.network=proxy"
 
 networks:
   landpage_network:
     driver: bridge
+  proxy:
+    external: true
 
 volumes:
   postgres_data:
