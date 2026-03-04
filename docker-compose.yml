@@ -31,8 +31,9 @@ services:
       - landpage_network
 
   nginx:
-    build: .
-    dockerfile: nginx.Dockerfile
+    build:
+      context: .
+      dockerfile: nginx.Dockerfile
     container_name: landpage_nginx
     restart: always
     depends_on:
