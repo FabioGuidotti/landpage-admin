@@ -30,3 +30,29 @@ class LandingResponse(LandingBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- Tracking Schemas ---
+
+class TrackingEventCreate(BaseModel):
+    landing_id: int
+    event_type: str  # 'pageview' or 'whatsapp_click'
+
+class LandingStats(BaseModel):
+    landing_id: int
+    total_views: int = 0
+    total_clicks: int = 0
+    views_today: int = 0
+    clicks_today: int = 0
+    conversion_rate: float = 0.0  # clicks / views * 100
+
+class OverviewStats(BaseModel):
+    total_views: int = 0
+    total_clicks: int = 0
+    views_today: int = 0
+    clicks_today: int = 0
+    conversion_rate: float = 0.0
+
+class LandingWithStats(LandingResponse):
+    stats: Optional[LandingStats] = None
+

@@ -1,5 +1,10 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import func as sql_func
+from datetime import datetime, date, timezone
 import models, schemas
+
+
+# --- Landing CRUD ---
 
 def get_landing(db: Session, landing_id: int):
     return db.query(models.Landing).filter(models.Landing.id == landing_id).first()
@@ -33,3 +38,147 @@ def delete_landing(db: Session, landing_id: int):
         db.delete(db_landing)
         db.commit()
     return db_landing
+
+
+# --- Tracking CRUD ---
+
+def create_tracking_event(db: Session, landing_id: int, event_type: str, ip_address: str = None, user_agent: str = None, referer: str = None):
+    event = models.TrackingEvent(
+        landing_id=landing_id,
+        event_type=event_type,
+        ip_address=ip_address,
+        user_agent=user_agent[:512] if user_agent else None,
+        referer=referer[:1024] if referer else None,
+    )
+    db.add(event)
+    db.commit()
+    return event
+
+
+def get_landing_stats(db: Session, landing_id: int) -> schemas.LandingStats:
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Total counts
+    total_views = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.landing_id == landing_id,
+        models.TrackingEvent.event_type == "pageview"
+    ).scalar() or 0
+
+    total_clicks = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.landing_id == landing_id,
+        models.TrackingEvent.event_type == "whatsapp_click"
+    ).scalar() or 0
+
+    # Today counts
+    views_today = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.landing_id == landing_id,
+        models.TrackingEvent.event_type == "pageview",
+        models.TrackingEvent.created_at >= today_start
+    ).scalar() or 0
+
+    clicks_today = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.landing_id == landing_id,
+        models.TrackingEvent.event_type == "whatsapp_click",
+        models.TrackingEvent.created_at >= today_start
+    ).scalar() or 0
+
+    conversion_rate = (total_clicks / total_views * 100) if total_views > 0 else 0.0
+
+    return schemas.LandingStats(
+        landing_id=landing_id,
+        total_views=total_views,
+        total_clicks=total_clicks,
+        views_today=views_today,
+        clicks_today=clicks_today,
+        conversion_rate=round(conversion_rate, 1)
+    )
+
+
+def get_all_stats(db: Session) -> dict:
+    """Get stats for all landings in a single batch."""
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    # Get all counts grouped by landing_id and event_type
+    total_counts = db.query(
+        models.TrackingEvent.landing_id,
+        models.TrackingEvent.event_type,
+        sql_func.count(models.TrackingEvent.id)
+    ).group_by(
+        models.TrackingEvent.landing_id,
+        models.TrackingEvent.event_type
+    ).all()
+
+    today_counts = db.query(
+        models.TrackingEvent.landing_id,
+        models.TrackingEvent.event_type,
+        sql_func.count(models.TrackingEvent.id)
+    ).filter(
+        models.TrackingEvent.created_at >= today_start
+    ).group_by(
+        models.TrackingEvent.landing_id,
+        models.TrackingEvent.event_type
+    ).all()
+
+    # Build stats dict keyed by landing_id
+    stats = {}
+    for landing_id, event_type, count in total_counts:
+        if landing_id not in stats:
+            stats[landing_id] = {"total_views": 0, "total_clicks": 0, "views_today": 0, "clicks_today": 0}
+        if event_type == "pageview":
+            stats[landing_id]["total_views"] = count
+        elif event_type == "whatsapp_click":
+            stats[landing_id]["total_clicks"] = count
+
+    for landing_id, event_type, count in today_counts:
+        if landing_id not in stats:
+            stats[landing_id] = {"total_views": 0, "total_clicks": 0, "views_today": 0, "clicks_today": 0}
+        if event_type == "pageview":
+            stats[landing_id]["views_today"] = count
+        elif event_type == "whatsapp_click":
+            stats[landing_id]["clicks_today"] = count
+
+    # Calculate conversion rates
+    result = {}
+    for lid, s in stats.items():
+        conv = (s["total_clicks"] / s["total_views"] * 100) if s["total_views"] > 0 else 0.0
+        result[lid] = schemas.LandingStats(
+            landing_id=lid,
+            total_views=s["total_views"],
+            total_clicks=s["total_clicks"],
+            views_today=s["views_today"],
+            clicks_today=s["clicks_today"],
+            conversion_rate=round(conv, 1)
+        )
+    return result
+
+
+def get_overview_stats(db: Session) -> schemas.OverviewStats:
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+
+    total_views = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.event_type == "pageview"
+    ).scalar() or 0
+
+    total_clicks = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.event_type == "whatsapp_click"
+    ).scalar() or 0
+
+    views_today = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.event_type == "pageview",
+        models.TrackingEvent.created_at >= today_start
+    ).scalar() or 0
+
+    clicks_today = db.query(sql_func.count(models.TrackingEvent.id)).filter(
+        models.TrackingEvent.event_type == "whatsapp_click",
+        models.TrackingEvent.created_at >= today_start
+    ).scalar() or 0
+
+    conversion_rate = (total_clicks / total_views * 100) if total_views > 0 else 0.0
+
+    return schemas.OverviewStats(
+        total_views=total_views,
+        total_clicks=total_clicks,
+        views_today=views_today,
+        clicks_today=clicks_today,
+        conversion_rate=round(conversion_rate, 1)
+    )

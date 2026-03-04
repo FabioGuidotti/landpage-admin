@@ -94,49 +94,103 @@ async function apiFetch(path, options = {}) {
     return response.json();
 }
 
-// CRUD
+// --- Data Fetching ---
+
 async function fetchLandings() {
     try {
-        landings = await apiFetch('/landings');
+        // Use the stats-enriched endpoint
+        landings = await apiFetch('/landings-with-stats');
         renderTable();
+        fetchOverviewStats();
     } catch (err) {
         console.error(err);
     }
 }
 
-function renderStats() {
+async function fetchOverviewStats() {
+    try {
+        const overview = await apiFetch('/stats/overview');
+        renderOverviewStats(overview);
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// --- Helper: format numbers ---
+function fmtNum(n) {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+}
+
+// --- Rendering ---
+
+function renderOverviewStats(overview) {
     const statsRow = document.getElementById('stats-row');
     if (!statsRow) return;
     const total = landings.length;
     const active = landings.filter(l => l.active).length;
-    const inactive = total - active;
+
     statsRow.innerHTML = `
         <div class="glass-panel stat-card">
-            <span class="stat-label">Total</span>
+            <span class="stat-label">Landing Pages</span>
             <span class="stat-value">${total}</span>
+            <span class="stat-sub">${active} ativas</span>
         </div>
         <div class="glass-panel stat-card">
-            <span class="stat-label">Ativas</span>
-            <span class="stat-value" style="color: var(--success)">${active}</span>
+            <span class="stat-icon">👁</span>
+            <span class="stat-label">Visitas Totais</span>
+            <span class="stat-value">${fmtNum(overview.total_views)}</span>
+            <span class="stat-sub stat-today">+${fmtNum(overview.views_today)} hoje</span>
         </div>
         <div class="glass-panel stat-card">
-            <span class="stat-label">Inativas</span>
-            <span class="stat-value" style="color: var(--text-secondary)">${inactive}</span>
+            <span class="stat-icon">💬</span>
+            <span class="stat-label">Cliques WhatsApp</span>
+            <span class="stat-value" style="color: var(--success)">${fmtNum(overview.total_clicks)}</span>
+            <span class="stat-sub stat-today">+${fmtNum(overview.clicks_today)} hoje</span>
+        </div>
+        <div class="glass-panel stat-card">
+            <span class="stat-icon">📈</span>
+            <span class="stat-label">Taxa de Conversão</span>
+            <span class="stat-value ${overview.conversion_rate >= 5 ? 'conv-good' : overview.conversion_rate >= 2 ? 'conv-ok' : 'conv-low'}">${overview.conversion_rate}%</span>
+            <span class="stat-sub">cliques / visitas</span>
         </div>
     `;
 }
 
 function renderTable() {
-    renderStats();
     landingsList.innerHTML = '';
     landings.forEach(l => {
         const tr = document.createElement('tr');
+        const s = l.stats || { total_views: 0, total_clicks: 0, views_today: 0, clicks_today: 0, conversion_rate: 0 };
         const googleBadge = l.pixel_google ? `<span class="google-badge">📊 Google</span>` : '';
+
+        // Conversion rate color class
+        let convClass = 'conv-low';
+        if (s.conversion_rate >= 5) convClass = 'conv-good';
+        else if (s.conversion_rate >= 2) convClass = 'conv-ok';
+
         tr.innerHTML = `
-            <td><strong>${l.subdomain}</strong> ${googleBadge}</td>
-            <td>${l.whatsapp_number || '-'}</td>
+            <td>
+                <strong>${l.subdomain}</strong>
+                ${googleBadge}
+            </td>
+            <td>
+                <div class="metric-cell">
+                    <span class="metric-total">${fmtNum(s.total_views)}</span>
+                    <span class="metric-today">+${fmtNum(s.views_today)} hoje</span>
+                </div>
+            </td>
+            <td>
+                <div class="metric-cell">
+                    <span class="metric-total metric-clicks">${fmtNum(s.total_clicks)}</span>
+                    <span class="metric-today">+${fmtNum(s.clicks_today)} hoje</span>
+                </div>
+            </td>
+            <td>
+                <span class="conversion-badge ${convClass}">${s.conversion_rate}%</span>
+            </td>
             <td><span class="status-badge ${l.active ? 'status-active' : 'status-inactive'}">${l.active ? 'Ativa' : 'Inativa'}</span></td>
-            <td>${new Date(l.created_at).toLocaleDateString('pt-BR')}</td>
             <td>
                 <a href="https://${l.subdomain}.ai.dashx.com.br" target="_blank" class="btn outline-btn action-btn view-btn">Ver</a>
                 <button class="btn outline-btn action-btn edit-btn" data-id="${l.id}">Editar</button>
@@ -151,7 +205,7 @@ function renderTable() {
     document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', (e) => handleDelete(e.target.dataset.id)));
 }
 
-// Modal handling
+// --- Modal handling ---
 newLandingBtn.addEventListener('click', () => openModal());
 closeModalBtn.addEventListener('click', closeModal);
 
