@@ -43,7 +43,9 @@ Certifique-se de que você já possui o [Portainer](https://www.portainer.io/) i
    - `FASTAPI_ADMIN_PASS`
 8. Role até o final da página e clique em **Deploy the stack**.
 
-> **Nota para usuários do Traefik:** O `docker-compose.yml` nativo está configurado para ingressar na rede `proxy` e buscar os certificados SSL via Let's Encrypt usando o **HTTP-01 Challenge**. Para adicionar novos subdomínios, edite a label `traefik.http.routers.landpage.rule` listando-os explicitamente (ex: `Host(\`mcp-tool.ai.dashx.com.br\`) || Host(\`profile-up.ai.dashx.com.br\`)`).
+> **Nota para usuários do Traefik:** O `docker-compose.yml` nativo está configurado com **dois roteadores** compartilhados na rede `proxy`:
+> 1. **Produção (`landpage` - Prioridade 100):** Emite certificados SSL válidos via Let's Encrypt (HTTP Challenge) para os subdomínios listados explicitamente na label `traefik.http.routers.landpage.rule` (ex: `Host(\`mcp-tool.ai.dashx.com.br\`) || Host(\`profile-up.ai.dashx.com.br\`)`).
+> 2. **Testes (`landpage-test` - Prioridade 50):** Captura qualquer subdomínio Wildcard (`*.ai.dashx.com.br`) e direciona ao container usando o certificado autoassinado (gerando aviso de SSL no navegador). Isso permite que você visualize e valide a qualidade das páginas antes de homologá-las oficialmente com SSL seguro.
 
 O Portainer fará o clone do projeto, realizará o build da imagem do FastAPI e subirá todos os containers (Nginx, FastAPI, PostgreSQL) automaticamente.
 
