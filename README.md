@@ -43,7 +43,7 @@ Certifique-se de que você já possui o [Portainer](https://www.portainer.io/) i
    - `FASTAPI_ADMIN_PASS`
 8. Role até o final da página e clique em **Deploy the stack**.
 
-> **Nota para usuários do Traefik:** O `docker-compose.yml` nativo já vem configurado para ingressar na rede `proxy` e buscar os certificados SSL via Let's Encrypt para `*.ai.dashx.com.br` e `ai.dashx.com.br` no entrypoint `websecure`. Certifique-se de que a rede no seu Portainer chama-se `proxy`.
+> **Nota para usuários do Traefik:** O `docker-compose.yml` nativo está configurado para ingressar na rede `proxy` e buscar os certificados SSL via Let's Encrypt usando o **HTTP-01 Challenge**. Para adicionar novos subdomínios, edite a label `traefik.http.routers.landpage.rule` listando-os explicitamente (ex: `Host(\`mcp-tool.ai.dashx.com.br\`) || Host(\`profile-up.ai.dashx.com.br\`)`).
 
 O Portainer fará o clone do projeto, realizará o build da imagem do FastAPI e subirá todos os containers (Nginx, FastAPI, PostgreSQL) automaticamente.
 
@@ -79,8 +79,10 @@ Exemplo: `http://admin.ai.dashx.com.br/admin`
 ---
 
 ## 🔐 Configurando SSL (HTTPS)
-Recomendamos colocar a VPS atrás do **Cloudflare** com SSL configurado como "Full" ou "Flexible". Não será necessário configurar certificados dentro da VPS; o Cloudflare cuidará do HTTPS publicamente e encaminhará porta 80 para sua máquina.
-Caso queira SSL direto no Nginx, substitua o bloco Nginx por uma configuração gerenciada pelo *Certbot/Let's Encrypt*.
+O SSL é gerenciado automaticamente pelo **Traefik** na VPS via Let's Encrypt utilizando o **HTTP-01 Challenge**. 
+Isso elimina a necessidade de qualquer configuração manual de certificados no Nginx ou chaves de API do DNS (Cloudflare/Hostinger). Para garantir o SSL seguro, basta garantir que:
+1. O subdomínio que você deseja publicar resolve para o IP da sua VPS (`72.60.154.82`).
+2. O subdomínio está presente na label `traefik.http.routers.landpage.rule` no seu `docker-compose.yml` (ex: `Host(\`mcp-tool.ai.dashx.com.br\`) || Host(\`profile-up.ai.dashx.com.br\`)`).
 
 ---
 

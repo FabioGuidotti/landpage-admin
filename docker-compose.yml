@@ -43,7 +43,7 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.landpage.rule=HostRegexp(`^.+\\.ai\\.dashx\\.com\\.br$$`)"
+      - "traefik.http.routers.landpage.rule=Host(`mcp-tool.ai.dashx.com.br`) || Host(`profile-up.ai.dashx.com.br`)"
       - "traefik.http.routers.landpage.entrypoints=websecure"
       - "traefik.http.routers.landpage.tls.certresolver=letsencrypt"
       - "traefik.http.services.landpage.loadbalancer.server.port=80"
