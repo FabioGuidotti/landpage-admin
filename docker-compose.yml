@@ -43,11 +43,24 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      
+      # Roteador 1: Producao (Com SSL Let's Encrypt para subdominios liberados)
       - "traefik.http.routers.landpage.rule=Host(`mcp-tool.ai.dashx.com.br`) || Host(`profile-up.ai.dashx.com.br`)"
       - "traefik.http.routers.landpage.entrypoints=websecure"
       - "traefik.http.routers.landpage.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.landpage.service=landpage"
+      - "traefik.http.routers.landpage.priority=100"
+      
+      # Roteador 2: Testes (Com SSL Autoassinado - para validar a qualidade antes de homologar)
+      - "traefik.http.routers.landpage-test.rule=HostRegexp(`^.+\\.ai\\.dashx\\.com\\.br$$`)"
+      - "traefik.http.routers.landpage-test.entrypoints=websecure"
+      - "traefik.http.routers.landpage-test.tls=true"
+      - "traefik.http.routers.landpage-test.service=landpage"
+      - "traefik.http.routers.landpage-test.priority=50"
+      
+      # Porta interna do Nginx do container
       - "traefik.http.services.landpage.loadbalancer.server.port=80"
-      - "traefik.docker.network=proxy"
 
 networks:
   landpage_network:
